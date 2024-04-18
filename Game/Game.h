@@ -1,0 +1,149 @@
+//
+// Game.h
+//
+
+#pragma once
+
+#include "StepTimer.h"
+#include <list>
+#include "CommonStates.h"
+#include "../DirectXTK/Inc/Effects.h" //this clashes with a SDK file so must explitily state it
+#include "Keyboard.h"
+#include "Mouse.h"
+#include "Audio.h"
+#include "CMOGO.h"
+#include "Coin.h"
+#include "Enemy.h"
+
+using std::list;
+
+// Forward declarations
+struct GameData;
+struct DrawData;
+struct DrawData2D;
+class GameObject;
+class GameObject2D;
+class Camera;
+class TPSCamera;
+class Light;
+class Sound;
+
+// A basic game implementation that creates a D3D11 device and
+// provides a game loop.
+class Game
+{
+public:
+	float mainRoomSize = 360.0f;
+	float smallRoomSize = 240.0f;
+	float wallThickness = 0.5f;
+	float wallHeight = 80.0f;
+	float coinElevation = 2.0f; // Height above the floor where coins will appear
+
+	// Calculated half widths considering wall thickness to avoid spawning coins inside walls
+	float mainRoomHalfWidth = (mainRoomSize / 2) - wallThickness;
+	float mainRoomHalfDepth = (mainRoomSize / 2) - wallThickness;
+	void CreateFloor(const DirectX::SimpleMath::Vector3& center, float width, float length, float wallThickness);
+	void CreateWall(const DirectX::SimpleMath::Vector3& position, const DirectX::SimpleMath::Vector3& scale, float rotationY, const std::string& modelName);
+	float enemySpawnTimer = 10.0f; // 10 seconds before the enemy spawns
+	void GenerateMap();
+	Game() noexcept;
+	~Game() = default;
+	void GenerateCoin();
+	Game(Game&&) = default;
+	Game& operator= (Game&&) = default;
+
+	Game(Game const&) = delete;
+	Game& operator= (Game const&) = delete;
+
+	// Initialization and management
+	void Initialize(HWND _window, int _width, int _height);
+
+	// Basic game loop
+	void Tick();
+
+	// Messages
+	void OnActivated();
+	void OnDeactivated();
+	void OnSuspending();
+	void OnResuming();
+	void OnWindowSizeChanged(int _width, int _height);
+
+	// Properties
+	void GetDefaultSize(int& _width, int& _height) const noexcept;
+
+private:
+
+	void Update(DX::StepTimer const& _timer);
+	void Render();
+	std::unique_ptr<Enemy> m_Enemy;
+	std::unique_ptr<Player> pPlayer;
+	std::list<Coin*> m_coins; // List of coins
+	int m_score;  // To track the player's score
+
+	void SpawnCoins(int numCoins);
+	void UpdateScoreDisplay();
+	void Clear();
+	void Present();
+	void DisplayGameOver();
+	void SpawnCoin();
+	void CreateDevice();
+	void CreateResources();
+	TextGO2D* m_scoreText;
+	void RestartGame();
+	void ResetGame();
+	void DisplayWinText();
+	void UpdateGameObjects();
+	void OnDeviceLost();
+
+	// Device resources.
+	HWND                                            m_window;
+	int                                             m_outputWidth;
+	int                                             m_outputHeight;
+
+	D3D_FEATURE_LEVEL                               m_featureLevel;
+	Microsoft::WRL::ComPtr<ID3D11Device1>           m_d3dDevice;
+	Microsoft::WRL::ComPtr<ID3D11DeviceContext1>    m_d3dContext;
+
+	Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  m_renderTargetView;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_depthStencilView;
+
+	// Rendering loop timer.
+	DX::StepTimer                                   m_timer;
+
+	//Scarle Added stuff
+	GameData* m_GD = NULL;			//Data to be shared to all Game Objects as they are ticked
+	DrawData* m_DD = NULL;			//Data to be shared to all 3D Game Objects as they are drawn
+	DrawData2D* m_DD2D = NULL;	    //Data to be passed by game to all 2D Game Objects via Draw
+	void StartGame();
+	//Basic 3D renderers
+	Camera* m_cam = NULL; //principle camera
+	TPSCamera* m_TPScam = NULL;//TPS cam
+	Light* m_light = NULL; //base light
+
+	//required for the CMO model rendering system
+	DirectX::CommonStates* m_states = NULL;
+	DirectX::IEffectFactory* m_fxFactory = NULL;
+
+	//basic keyboard and mouse input system
+	void ReadInput(); //Get current Mouse and Keyboard states
+	std::unique_ptr<DirectX::Keyboard> m_keyboard;
+	std::unique_ptr<DirectX::Mouse> m_mouse;
+
+	list<GameObject*> m_GameObjects; //data structure to hold pointers to the 3D Game Objects
+	list<GameObject2D*> m_GameObjects2D; //data structure to hold pointers to the 2D Game Objects
+
+	//list<CMOGO*> m_CMOGameObjects; //data structure to hold pointers to all 3D CMO Game Objects
+	//list<CMOGO*> m_PhysicsObjects
+
+	std::vector<CMOGO*> m_ColliderObjects;
+	std::vector<CMOGO*> m_PhysicsObjects;
+
+	void CheckCollision();
+
+	//sound stuff
+	//This uses a simple system, but a better pipeline can be used using Wave Banks
+	//See here: https://github.com/Microsoft/DirectXTK/wiki/Creating-and-playing-sounds Using wave banks Section
+	std::unique_ptr<DirectX::AudioEngine> m_audioEngine;
+	list<Sound*>m_Sounds;
+};
