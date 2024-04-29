@@ -333,6 +333,7 @@ void Game::Update(DX::StepTimer const& _timer)
 		(*it)->Tick(m_GD);
 	}
 
+
 	CheckCollision();
 }
 

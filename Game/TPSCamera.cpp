@@ -19,7 +19,7 @@ void TPSCamera::Tick(GameData* _GD) {
 	m_pos = m_targetObject->GetPos() + DirectX::SimpleMath::Vector3::Transform(m_offset, rotMatrix);
 
 	// Adjust the forward direction if it's currently looking backward
-	m_target = m_pos - DirectX::SimpleMath::Vector3::Transform(Vector3::UnitZ, rotMatrix);  // Note the minus sign
+	m_target = m_pos - DirectX::SimpleMath::Vector3::Transform(Vector3::UnitZ, rotMatrix);  
 
 	Camera::Tick(_GD);
 }
