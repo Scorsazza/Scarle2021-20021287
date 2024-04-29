@@ -271,7 +271,12 @@ void Game::ResetGame() {
 			m_ColliderObjects.erase(std::remove(m_ColliderObjects.begin(), m_ColliderObjects.end(), coin), m_ColliderObjects.end()); // Remove from collider objects
 		}
 	}
-
+	for (auto obj : m_GameObjects) {
+		Enemy* pEnemy = dynamic_cast<Enemy*>(obj);
+		if (pEnemy) {
+			pEnemy->Activate(true);
+		}
+	}
 	GenerateMap();
 
 	if (std::find(m_GameObjects2D.begin(), m_GameObjects2D.end(), m_scoreText) == m_GameObjects2D.end()) {
@@ -682,6 +687,8 @@ void Game::ReadInput() {
 	if (m_GD->m_GS == GS_MAIN_MENU && m_GD->m_KBS_tracker.pressed.Enter) {
 		StartGame();
 	}
+
+
 
 	m_GD->m_MS = m_mouse->GetState();
 	RECT window;
